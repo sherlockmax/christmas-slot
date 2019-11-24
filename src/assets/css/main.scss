@@ -1,0 +1,17 @@
+@import 'customBootstrap';
+@import '~bootstrap/scss/bootstrap';
+
+* {
+  cursor: default;
+  -webkit-app-region: no-drag;
+}
+
+body,
+html {
+  width: 100%;
+  height: 100vh;
+  padding: 0px;
+  margin: 0px;
+  overflow: hidden;
+  -webkit-app-region: drag !important;
+}
