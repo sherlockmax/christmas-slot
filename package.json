@@ -20,6 +20,7 @@
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.1.0",
     "core-js": "^3.3.2",
+    "imports-loader": "^0.8.0",
     "jquery": "^3.4.1",
     "popper.js": "^1.16.0",
     "pug": "^2.0.4",
@@ -27,6 +28,7 @@
     "pug-html-loader": "^1.1.5",
     "pug-loader": "^2.4.0",
     "pug-plain-loader": "^1.0.0",
+    "snapsvg": "^0.5.1",
     "vue": "^2.6.10",
     "vue-router": "^3.1.3"
   },
