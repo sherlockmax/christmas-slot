@@ -1,47 +1,30 @@
 <template lang="pug">
-  .container-fluid.h-100.p-0
-    video#myVideo(autoplay='true' loop='true')
-      source(src='@/assets/video/02_Loop.mp4' type='video/mp4')
-    svg#svgout.h-100.w-100(ref="board" style="z-index: 11; position: fixed; top: 0px; left: 0px;")
-    //- .row.h-100
-    //-   .col.h-100
-    //-     .d-flex.justify-content-center.align-items-center.h-100
-    //-       .card-box.m-1(v-for="(c, i) in cardList" :class="{ 'opened': c.isOpened }" @click="toogleCard(i)")
-    //-         .card-number-blank(:style="`background-image: url(${cardBlankImg})`")
-    //-           .card-number-text.text-primary.d-flex.justify-content-center.align-items-center.h-100 {{ c.number }}
-    //-         .card-number.p-1(:style="`background-image: url(${cardImg})`")
-  
+  .container-fluid.h-100.p-0(ref="board")
+    video.v-loop(autoplay='true' loop='true')
+      source(src='@/assets/video/02_Loop_1.mp4' type='video/mp4')
+    .card-box.m-3(v-for="(c, i) in cardList" :class="{ 'opened': c.isOpened }" :style="[c.style]" @click="toogleCard(i)")
+      .card-number-blank(:style="`background-image: url(${cardBlankImg})`")
+        .card-number-text.text-primary.d-flex.justify-content-center.align-items-center.h-100 {{ c.number }}
+      .card-number.p-1(:style="`background-image: url(${cardImg})`")  
 </template>
 
 <script>
 const { remote } = require('electron')
 
-import Snap from 'snapsvg'
-
 export default {
   data() {
     return {
       isFullScreen: true,
-      cardAmount: 10,
+      cardAmount: 6,
       cardList: [],
       state: true,
       cardBlankImg: require('@/assets/img/card-board.png'),
-      cardImg: require('@/assets/img/cb.png'),
-      s: null
+      cardImg: require('@/assets/img/cb.png')
     }
   },
   mounted() {
     window.addEventListener('keyup', this.handleKeyup)
 
-    for (let i = 1; i <= this.cardAmount; i++) {
-      let card = {
-        isOpened: false,
-        number: 0
-      }
-      this.cardList.push(card)
-    }
-
-    this.s = Snap('#svgout')
     this.drawCard()
   },
   destroyed() {
@@ -59,12 +42,15 @@ export default {
           console.log('open all card')
           this.openAll()
           break
+        case 27: // esc
+          console.log('close all card')
+          this.closeAll()
+          break
         default:
           console.log('do nothing')
       }
     },
     fullScreen() {
-      this.s.clear()
       const w = remote.getCurrentWindow()
       w.setFullScreen(this.isFullScreen)
       this.isFullScreen = !this.isFullScreen
@@ -74,74 +60,97 @@ export default {
       }, 1)
     },
     drawCard() {
+      this.cardList = []
       const winSize = {
         height: this.$refs.board.clientHeight,
         width: this.$refs.board.clientWidth
       }
-      console.log(!this.isFullScreen, winSize)
 
       const boardR = winSize.width
       const boardX = winSize.width / 2
-      const boardGap = boardR * 0.12
-      const boardY = boardR + boardGap
 
-      const cardW = winSize.width / 10
+      const cardW = winSize.width / 11
       const cardH = cardW * 1.5
-      const cardAmount = 6
       let degree = -19.5
+      const boardGap = boardR * 0.16
+      const heightGap = [75, 25, 0, 0, 25, 75]
+      const heightGap2 = [70, 20, 0, 20, 70]
 
-      // this.s.circle(boardX, boardY, boardR)
-
-      for (let i = 0; i < cardAmount; i++) {
-        const card = this.s.image(this.cardImg, winSize.width / 2 - cardW / 2, boardGap, cardW, cardH)
-        card.transform('r' + degree + ',' + boardX + ',' + boardY)
+      for (let i = 0; i < this.cardAmount; i++) {
+        let card = {
+          isOpened: false,
+          number: 0,
+          degree,
+          style: {
+            width: cardW + 'px',
+            height: cardH + 'px',
+            top: boardGap + heightGap[i] + 'px',
+            left: boardX - (cardW + 32) * (this.cardAmount / 2) + i * (cardW + 32) + 'px',
+            'transform-origin': 'bottom center',
+            transform: 'rotate(' + degree + 'deg)'
+          }
+        }
         degree += 8
-
-        // Snap.animate(
-        //   0,
-        //   -355,
-        //   function(value) {
-        //     card.transform(new Snap.Matrix().rotate(value, boardX, boardY))
-        //   },
-        //   1000
-        // )
+        this.cardList.push(card)
       }
 
       degree = -19.5
-      for (let i = 0; i < cardAmount - 1; i++) {
-        const card = this.s.image(this.cardImg, winSize.width / 2 - cardW / 2, boardGap + cardH + 60, cardW, cardH)
-        card.transform('r' + degree + ',' + boardX + ',' + boardY)
+      for (let i = 0; i < this.cardAmount - 1; i++) {
+        let card = {
+          isOpened: false,
+          number: 0,
+          degree,
+          style: {
+            width: cardW + 'px',
+            height: cardH + 'px',
+            top: boardGap + cardH + heightGap2[i] + 30 + 'px',
+            left: boardX - (cardW + 32) * ((this.cardAmount - 1) / 2) + i * (cardW + 32) + 'px',
+            'transform-origin': 'bottom center',
+            transform: 'rotate(' + degree + 'deg)'
+          }
+        }
         degree += 10
-
-        // Snap.animate(
-        //   0,
-        //   -355,
-        //   function(value) {
-        //     card.transform(new Snap.Matrix().rotate(value, boardX, boardY))
-        //   },
-        //   1000
-        // )
+        this.cardList.push(card)
       }
     },
-    toogleCard(cardIndex) {
+    toogleCard(cardIndex, isOpen) {
       if (!this.cardList[cardIndex].isOpened) {
         this.cardList[cardIndex].number = this.getRand(1, 110)
       }
-      this.cardList[cardIndex].isOpened = !this.cardList[cardIndex].isOpened
+      this.cardList[cardIndex].isOpened = isOpen
+      const card = this.cardList[cardIndex]
+      if (this.cardList[cardIndex].isOpened) {
+        this.cardList[cardIndex].style.transform = 'rotate(' + card.degree + 'deg) rotateY(180deg)'
+      } else {
+        this.cardList[cardIndex].style.transform = 'rotate(' + card.degree + 'deg)'
+      }
     },
     openAll() {
-      if (!this.state) {
+      if (!this.state || this.cardList[0].isOpened) {
         return
       }
 
       this.state = false
       this.cardList.forEach((card, k) => {
         setTimeout(() => {
-          this.toogleCard(k)
+          this.toogleCard(k, true)
         }, 500 * k)
         setTimeout(() => {
           this.state = true
-        }, this.cardAmount * 500)
+        }, this.cardList.length * 500)
+      })
+    },
+    closeAll() {
+      if (!this.state || !this.cardList[0].isOpened) {
+        return
+      }
+
+      this.state = false
+      this.cardList.forEach((card, k) => {
+        this.toogleCard(k, false)
+        setTimeout(() => {
+          this.state = true
+        }, 2000)
       })
     },
     getRand(min, max) {
@@ -155,17 +164,11 @@ export default {
 @import url('https://fonts.googleapis.com/css?family=Odibee+Sans&display=swap');
 
 .card-box {
-  width: 10%;
-  height: 25%;
   display: inline-block;
-  position: relative;
+  position: fixed;
 
   transform-style: preserve-3d;
-  transition: 1s all ease;
-}
-
-.card-box.opened {
-  transform: rotateY(180deg);
+  transition: 0.5s all ease;
 }
 
 .card-number {
@@ -200,12 +203,27 @@ export default {
   font-family: 'Odibee Sans', cursive;
 }
 
-#myVideo {
-  position: relative;
+.board {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+
+.v-loop {
+  position: fixed;
   right: 0;
   bottom: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
+}
+
+.v-open {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
 }
 </style>
