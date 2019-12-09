@@ -1,10 +1,13 @@
 <template lang="pug">
   .container-fluid.h-100.p-0(ref="board")
-    video.v-loop(autoplay='true' loop='true')
-      source(src='@/assets/video/02_Loop_1.mp4' type='video/mp4')
-    .card-box.m-3(v-for="(c, i) in cardList" :class="{ 'opened': c.isOpened }" :style="[c.style]" @click="toogleCard(i)")
+    video.v-bg.v-open(v-if="isOpenShow" autoplay='true' loop='true')
+      source(src='@/assets/video/open.mp4' type='video/mp4')
+    video.v-bg.v-loop(autoplay='true' loop='true')
+      source(src='@/assets/video/loop.mp4' type='video/mp4')
+    img.settings(src='@/assets/img/settings.png')
+    .card-box.m-3(v-for="(c, i) in cardList" :class="{ 'opened': c.isOpened }" :style="[c.style]")
       .card-number-blank(:style="`background-image: url(${cardBlankImg})`")
-        .card-number-text.text-primary.d-flex.justify-content-center.align-items-center.h-100 {{ c.number }}
+        .card-number-text.d-flex.justify-content-center.align-items-center.h-100 {{ c.number }}
       .card-number.p-1(:style="`background-image: url(${cardImg})`")  
 </template>
 
@@ -14,12 +17,13 @@ const { remote } = require('electron')
 export default {
   data() {
     return {
+      isOpenShow: true,
       isFullScreen: true,
       cardAmount: 6,
       cardList: [],
       state: true,
-      cardBlankImg: require('@/assets/img/card-board.png'),
-      cardImg: require('@/assets/img/cb.png')
+      cardBlankImg: require('@/assets/img/card_front.png'),
+      cardImg: require('@/assets/img/card_back.png')
     }
   },
   mounted() {
@@ -39,12 +43,16 @@ export default {
           this.fullScreen()
           break
         case 32: // space
-          console.log('open all card')
+          console.log('Space: open cards')
           this.openAll()
           break
-        case 27: // esc
-          console.log('close all card')
+        case 81: // q
+          console.log('Q: close cards')
           this.closeAll()
+          break
+        case 69: // e
+          console.log('E: Toogle opening video')
+          this.isOpenShow = !this.isOpenShow
           break
         default:
           console.log('do nothing')
@@ -126,7 +134,7 @@ export default {
       }
     },
     openAll() {
-      if (!this.state || this.cardList[0].isOpened) {
+      if (!this.state || this.cardList[0].isOpened || this.isOpenShow) {
         return
       }
 
@@ -150,7 +158,7 @@ export default {
         this.toogleCard(k, false)
         setTimeout(() => {
           this.state = true
-        }, 2000)
+        }, 500)
       })
     },
     getRand(min, max) {
@@ -171,6 +179,18 @@ export default {
   transition: 0.5s all ease;
 }
 
+@-webkit-keyframes box {
+  0% {
+    top: 0px;
+  }
+  50% {
+    top: 20px;
+  }
+  100% {
+    top: 0px;
+  }
+}
+
 .card-number {
   position: absolute;
   height: 100%;
@@ -179,6 +199,8 @@ export default {
   background-size: 100% 100%;
   background-position: center center;
   border-radius: 5px;
+
+  -webkit-animation: box 5s infinite;
 }
 
 .card-number-blank {
@@ -191,14 +213,17 @@ export default {
   border-radius: 5px;
 
   transform: rotateY(180deg);
+
+  -webkit-animation: box 5s infinite;
 }
 
 .card-number-text {
   position: absolute;
   width: 100%;
-  font-size: 70px;
+  font-size: 90px;
   padding-top: 10px;
   text-align: center;
+  color: #eea65b !important;
 
   font-family: 'Odibee Sans', cursive;
 }
@@ -209,21 +234,36 @@ export default {
   left: 0px;
 }
 
-.v-loop {
+.settings {
+  z-index: 2;
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  width: 40px;
+  opacity: 0.3;
+}
+
+.settings:hover {
+  opacity: 0.5;
+}
+
+.settings:active {
+  opacity: 0.4;
+}
+
+.v-bg {
   position: fixed;
   right: 0;
   bottom: 0;
   width: 100%;
   height: 100%;
+}
+
+.v-loop {
   z-index: 0;
 }
 
 .v-open {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
   z-index: 2;
 }
 </style>
