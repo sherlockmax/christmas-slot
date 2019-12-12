@@ -1,23 +1,56 @@
 <template lang="pug">
-  .container-fluid.v-100.h-100.p-0(ref="board")
-    .settings-page(v-if="isSettingsShow")
-      .container.h-100
-        .row.h-100
-          .col.h-100
-            .row
-             .col-auto(v-for="ball in ballPool") {{ ball }}
-          .col.h-100
-            .row(v-for="bList in results")
-              .col-auto(v-for="ball in bList") {{ ball }}
+  .container-fluid.mono-text.v-100.h-100.p-0(ref="board")
+    .settings-page.bg-dark(v-if="isSettingsShow")
+      .container.p-0
+        b-card(no-body='')
+          b-tabs(card style="font-size: 1.5em")
+            b-tab(title='Ball Pool & Result' default)
+              .row.h-100
+                .col.h-100
+                  .row.h-100.pb-0(style="overflow-y: scroll")
+                    .col-2.p-1(v-for="b in ballPool")
+                      b-button(block variant='outline-light') {{ b }}
+                .col.h-100
+                  .row.h-100.pb-0(style="overflow-y: scroll")
+                    .col.h-100
+                      .row(v-for="(list, i) in results")
+                        .col-2.p-1.text-center {{ i+1 }}
+                        .col-2.p-1(v-for="b in list")
+                          b-button(block variant='info') {{ b }}
+            b-tab(title='Info')
+              div
+                b-badge(variant='warning') Q 
+                span.ml-3 Cover the card
+              div
+                b-badge(variant='warning') W 
+                span.ml-3 Enable/Disable fullscreen
+              div
+                b-badge(variant='warning') E
+                span.ml-3 Enable/Disable opening page
+              div
+                b-badge(variant='warning') R 
+                span.ml-3 Wash card
+              div
+                b-badge(variant='warning') T 
+                span.ml-3 Reset ball pool
+              div
+                b-badge(variant='warning') S 
+                span.ml-3 Open/Close settings
+              div
+                b-badge(variant='warning') Space 
+                span.ml-3 Draw & Turn over the cards
     img.settings(src='@/assets/img/settings.png' @click="toggleSettings()")
+    .draw-info {{ ballPool.length }}
     .card-box.m-3(v-for="(c, i) in cardList" :class="{ 'opened': c.isOpened }" :style="[c.style]")
       .card-front(:style="`background-image: url(${cardFrontImg})`")
         .card-number-text.d-flex.justify-content-center.align-items-center.h-100 {{ c.number }}
       .card-back.p-1(:style="`background-image: url(${cardBackImg})`")
-    video.v-bg.v-open(v-if="isOpenShow" autoplay='true' loop='true')
-      source(src='@/assets/video/open.mp4' type='video/mp4')
-    video.v-bg.v-loop(autoplay='true' loop='true')
-      source(src='@/assets/video/loop.mp4' type='video/mp4')
+    transition
+      video.v-bg.v-open(v-if="isOpenShow" autoplay='true' loop='true')
+        source(src='@/assets/video/main.mp4' type='video/mp4')
+    transition
+      video.v-bg.v-loop(autoplay='true' loop='true')
+        source(src='@/assets/video/loop.mp4' type='video/mp4')
 </template>
 
 <script>
@@ -97,7 +130,7 @@ export default {
     resetBallPool() {
       this.ballPool = []
       this.results = []
-      for (let b = 1; b <= 11; b++) {
+      for (let b = 1; b <= 110; b++) {
         this.ballPool.push(b)
       }
     },
@@ -206,7 +239,7 @@ export default {
           this.cardList[k].style.left = this.cardList[k].x + 'px'
           this.cardList[k].style.transform = 'rotate(' + this.cardList[k].degree + 'deg)'
         })
-      }, 600)
+      }, 1000)
     },
     toogleCard(cardIndex, isOpen) {
       if (!this.cardList[cardIndex].isOpened) {
@@ -277,14 +310,7 @@ export default {
 </script>
 
 <style type="scss">
-@import url('https://fonts.googleapis.com/css?family=Odibee+Sans&display=swap');
-
-.card-box {
-  position: fixed;
-  transform-style: preserve-3d;
-  transition: 0.5s all ease;
-  z-index: 3;
-}
+@import url('https://fonts.googleapis.com/css?family=Nova+Mono|Odibee+Sans&display=swap');
 
 @keyframes box {
   0% {
@@ -296,6 +322,29 @@ export default {
   100% {
     top: -10px;
   }
+}
+
+.mono-text {
+  font-family: 'Nova Mono', monospace;
+}
+
+.draw-info {
+  position: fixed;
+  top: 18%;
+  left: 50%;
+  text-align: center;
+  width: 600px;
+  margin-left: -300px;
+  color: white;
+
+  z-index: 3;
+}
+
+.card-box {
+  position: fixed;
+  transform-style: preserve-3d;
+  transition: 0.5s all ease;
+  z-index: 3 !important;
 }
 
 .card-back {
@@ -336,7 +385,7 @@ export default {
 }
 
 .settings {
-  z-index: 2;
+  z-index: 6;
   position: fixed;
   right: 10px;
   bottom: 10px;
@@ -365,12 +414,11 @@ export default {
 }
 
 .v-open {
-  z-index: 2;
+  z-index: 4;
 }
 
 .settings-page {
   position: fixed;
-  background: black;
   border: 2px solid #eea65b;
   border-radius: 20px;
   top: 50%;
@@ -380,5 +428,32 @@ export default {
   margin-top: -324px;
   margin-left: -512px;
   z-index: 5;
+
+  overflow: hidden;
+}
+
+.tab-content,
+.tab-pane {
+  border: 0px;
+  height: 580px !important;
+}
+
+.v-leave {
+  opacity: 1;
+}
+.v-leave-active {
+  transition: opacity 1s;
+}
+.v-leave-to {
+  opacity: 0;
+}
+.v-enter {
+  opacity: 0;
+}
+.v-enter-active {
+  transition: opacity 1s;
+}
+.v-enter-to {
+  opacity: 1;
 }
 </style>
