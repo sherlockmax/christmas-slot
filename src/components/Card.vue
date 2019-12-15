@@ -14,19 +14,13 @@
 module.exports = {
   props: ['customStyle', 'number', 'isOpened', 'numberStyle', 'cardSize'],
   data() {
-    return {
-      backgroundSize: {
+    return {}
+  },
+  computed: {
+    backgroundSize() {
+      return {
         '--size': this.cardSize.width * 30 * -1 + 'px',
         backgroundSize: this.cardSize.width * 30 + 'px ' + this.cardSize.height + 'px'
-      }
-    }
-  },
-  mounted() {},
-  watch: {
-    cardSize: (v) => {
-      this.backgroundSize = {
-        '--size': v.width * 30 * -1 + 'px',
-        backgroundSize: v.width * 30 + 'px ' + v.height + 'px'
       }
     }
   }

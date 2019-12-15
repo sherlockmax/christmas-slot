@@ -2,6 +2,9 @@
   .container-fluid.mono-text.v-100.h-100.p-0(ref="board")
     Settings(v-if="isSettingsShow" :results="results" :ballPool="ballPool")
     img.settings(src='@/assets/img/settings.png' @click="toggleSettings()")
+    transition
+      .key-info(v-if="isOpenShow")
+        div Press 'E' to start
     .draw-info 
       div Round {{ this.results.length }}
       div {{ ballPool.length }} / {{ totalBallPool }}
@@ -17,16 +20,17 @@
 
 <script>
 const { remote } = require('electron')
-import Card from './views/Card'
-import Settings from './views/Setting'
+import Store from './app/store'
+import Card from './components/Card'
+import Settings from './components/Setting'
 
 export default {
   components: { Card, Settings },
   data() {
     return {
-      isOpenShow: false,
+      isOpenShow: true,
       isSettingsShow: false,
-      isFullScreen: true,
+      isFullScreen: false,
       cardAmount: 11,
       maxPerLine: 6,
       cardList: [],
@@ -34,14 +38,31 @@ export default {
       ballPool: [],
       results: [],
       currentResult: [],
-      totalBallPool: 0
+      totalBallPool: 0,
+      store: null
     }
   },
   mounted() {
+    // First instantiate the class
+    this.store = new Store({
+      // We'll call our data file 'user-preferences'
+      configName: 'user-preferences',
+      defaults: {
+        totalBallPool: 0,
+        ballPool: [],
+        results: []
+      }
+    })
+
+    this.ballPool = this.store.get('ballPool')
+    this.results = this.store.get('results')
+    this.totalBallPool = this.store.get('totalBallPool')
     const w = remote.getCurrentWindow()
     this.isFullScreen = !w.isFullScreen()
 
-    this.resetBallPool()
+    if (this.ballPool.length <= 0) {
+      this.resetBallPool()
+    }
     this.drawCard()
 
     window.addEventListener('keyup', this.handleKeyup)
@@ -90,6 +111,8 @@ export default {
         this.ballPool.push(b)
       }
       this.totalBallPool = this.ballPool.length
+
+      this.saveData()
     },
     drawCard() {
       const winSize = {
@@ -218,11 +241,13 @@ export default {
             this.currentResult.push(this.getRandNumber())
             this.toogleCard(k, true)
           }, 500 * k)
-          setTimeout(() => {
-            this.state = true
-          }, this.cardList.length * 500)
         })
         this.results.push(this.currentResult)
+
+        setTimeout(() => {
+          this.state = true
+          this.saveData()
+        }, this.cardList.length * 500)
       }, 2500)
     },
     closeAll() {
@@ -250,13 +275,19 @@ export default {
       this.ballPool.splice(index, 1)
 
       return result
+    },
+    saveData() {
+      this.store.set('totalBallPool', this.totalBallPool)
+      this.store.set('ballPool', this.ballPool)
+      this.store.set('results', this.results)
     }
   }
 }
 </script>
 
 <style type="scss" scoped>
-.draw-info {
+.draw-info,
+.key-info {
   position: fixed;
   bottom: 20px;
   left: 50%;
@@ -267,6 +298,10 @@ export default {
   font-size: 30px;
 
   z-index: 3;
+}
+
+.key-info {
+  z-index: 5;
 }
 
 .settings {
