@@ -3,16 +3,32 @@
     .card-content
         .card-back
           img(src='@/assets/img/card_back.png')
+          .fx(ref="cardBackFX" v-if="!isOpened" :style="[backgroundSize]")
         .card-front
           img(src='@/assets/img/card_front.png')
+          .fx(ref="cardFrontFX" v-if="isOpened" :style="[backgroundSize]")
           .card-text.d-flex.justify-content-center.align-items-center(:style="numberStyle") {{ number }}
 </template>
 
 <script>
 module.exports = {
-  props: ['customStyle', 'number', 'isOpened', 'numberStyle'],
+  props: ['customStyle', 'number', 'isOpened', 'numberStyle', 'cardSize'],
   data() {
-    return {}
+    return {
+      backgroundSize: {
+        '--size': this.cardSize.width * 30 * -1 + 'px',
+        backgroundSize: this.cardSize.width * 30 + 'px ' + this.cardSize.height + 'px'
+      }
+    }
+  },
+  mounted() {},
+  watch: {
+    cardSize: (v) => {
+      this.backgroundSize = {
+        '--size': v.width * 30 * -1 + 'px',
+        backgroundSize: v.width * 30 + 'px ' + v.height + 'px'
+      }
+    }
   }
 }
 </script>
@@ -39,6 +55,26 @@ module.exports = {
 
   font-size: 110px;
   color: #eea65b;
+}
+
+.card-front .fx {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+
+  background: url('../assets/img/fx_front.png');
+  animation: fx 6s steps(30) infinite;
+}
+
+.card-back .fx {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+
+  background: url('../assets/img/fx_back.png');
+  animation: fx 6s steps(30) infinite;
 }
 
 .card-content {
@@ -73,6 +109,16 @@ module.exports = {
   }
   100% {
     top: -10px;
+  }
+}
+
+@keyframes fx {
+  0% {
+    background-position: 0px;
+  }
+  15%,
+  100% {
+    background-position: var(--size);
   }
 }
 </style>

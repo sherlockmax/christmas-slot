@@ -5,8 +5,8 @@
     .draw-info 
       div Round {{ this.results.length }}
       div {{ ballPool.length }} / {{ totalBallPool }}
-    transition(v-for="(c, i) in cardList")
-      Card(:key="i" :customStyle="c.style" :number="c.number" :isOpened="c.isOpened" :numberStyle="c.numberStyle")
+    transition(v-for="(c, i) in cardList" :key="`card_` + i")
+      Card(:customStyle="c.style" :number="c.number" :isOpened="c.isOpened" :numberStyle="c.numberStyle" :cardSize="{width: c.cardW, height: c.cardH}")
     transition
       video.v-bg.v-open(v-if="isOpenShow" autoplay='true' loop='true')
         source(src='@/assets/video/main.mp4' type='video/mp4')
