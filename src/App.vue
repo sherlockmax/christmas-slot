@@ -1,5 +1,11 @@
 <template lang="pug">
   .container-fluid.mono-text.v-100.h-100.p-0(ref="board")
+    transition
+      video.v-bg.v-open(v-if="isOpenShow" autoplay='true' loop='true')
+        source(src='@/assets/video/main.mp4' type='video/mp4')
+    transition
+      video.v-bg.v-loop(autoplay='true' loop='true')
+        source(src='@/assets/video/loop.mp4' type='video/mp4')
     Settings(v-if="isSettingsShow" :results="results" :ballPool="ballPool")
     img.settings(src='@/assets/img/settings.png' @click="toggleSettings()")
     transition
@@ -10,12 +16,6 @@
       div {{ ballPool.length }} / {{ totalBallPool }}
     transition(v-for="(c, i) in cardList" :key="`card_` + i")
       Card(:customStyle="c.style" :number="c.number" :isOpened="c.isOpened" :numberStyle="c.numberStyle" :cardSize="{width: c.cardW, height: c.cardH}")
-    transition
-      video.v-bg.v-open(v-if="isOpenShow" autoplay='true' loop='true')
-        source(src='@/assets/video/main.mp4' type='video/mp4')
-    transition
-      video.v-bg.v-loop(autoplay='true' loop='true')
-        source(src='@/assets/video/loop.mp4' type='video/mp4')
 </template>
 
 <script>
