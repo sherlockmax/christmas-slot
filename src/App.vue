@@ -12,7 +12,8 @@
       .key-info(v-if="isOpenShow")
         div Press 'E' to start
     .draw-info 
-      div Round {{ this.results.length }}
+      div
+        .round.bg-warning.text-dark(v-for="r in (1, this.results.length)" @click="playResult(r-1)" :class="{'bg-white text-dark' : currentResultIndex == r}") {{ r }}
       div {{ ballPool.length }} / {{ totalBallPool }}
     transition(v-for="(c, i) in cardList" :key="`card_` + i")
       Card(:customStyle="c.style" :number="c.number" :isOpened="c.isOpened" :numberStyle="c.numberStyle" :cardSize="{width: c.cardW, height: c.cardH}")
@@ -38,6 +39,7 @@ export default {
       ballPool: [],
       results: [],
       currentResult: [],
+      currentResultIndex: 0,
       totalBallPool: 0,
       store: null
     }
@@ -57,6 +59,7 @@ export default {
     this.ballPool = this.store.get('ballPool')
     this.results = this.store.get('results')
     this.totalBallPool = this.store.get('totalBallPool')
+    this.currentResultIndex = this.results.length
     const w = remote.getCurrentWindow()
     this.isFullScreen = !w.isFullScreen()
 
@@ -107,7 +110,7 @@ export default {
     resetBallPool() {
       this.ballPool = []
       this.results = []
-      for (let b = 1; b <= 110; b++) {
+      for (let b = 1; b <= 25; b++) {
         this.ballPool.push(b)
       }
       this.totalBallPool = this.ballPool.length
@@ -227,8 +230,8 @@ export default {
       }
       this.cardList[cardIndex].isOpened = isOpen
     },
-    openAll() {
-      if (!this.state || this.cardList[0].isOpened || this.isOpenShow) {
+    openAll(playResults) {
+      if (!this.state || this.cardList[0].isOpened || this.isOpenShow || this.ballPool.length <= 0) {
         return
       }
 
@@ -238,17 +241,40 @@ export default {
       setTimeout(() => {
         this.cardList.forEach((card, k) => {
           setTimeout(() => {
-            this.currentResult.push(this.getRandNumber())
+            let result = 0
+            if (playResults && playResults[k]) {
+              result = playResults[k]
+            } else {
+              result = this.getRandNumber()
+            }
+            this.currentResult.push(result)
             this.toogleCard(k, true)
           }, 500 * k)
         })
-        this.results.push(this.currentResult)
+        if (playResults == null) {
+          this.results.push(this.currentResult)
+          this.currentResultIndex = this.results.length
+        }
 
         setTimeout(() => {
           this.state = true
           this.saveData()
         }, this.cardList.length * 500)
       }, 2500)
+    },
+    playResult(resultsIndex) {
+      if (!this.state) {
+        return
+      }
+      if (this.cardList[0].isOpened) {
+        this.closeAll()
+        setTimeout(() => {
+          this.openAll(this.results[resultsIndex])
+        }, 1000)
+      } else {
+        this.openAll(this.results[resultsIndex])
+      }
+      this.currentResultIndex = resultsIndex + 1
     },
     closeAll() {
       if (!this.state || !this.cardList[0].isOpened || this.isOpenShow) {
@@ -319,6 +345,24 @@ export default {
 
 .settings:active {
   opacity: 0.4;
+}
+
+.round {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.6em;
+  margin: 2px;
+  opacity: 0.6;
+}
+
+.round:hover {
+  opacity: 0.8;
+}
+
+.round:active {
+  opacity: 0.5;
 }
 
 .v-bg {

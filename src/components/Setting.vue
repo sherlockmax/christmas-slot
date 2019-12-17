@@ -3,19 +3,19 @@
       .container.p-0
         b-card(no-body)
           b-tabs(card style="font-size: 1.5em" active-nav-item-class="text-warning")
-            b-tab(title='Ball Pool & Result' default)
+            b-tab(title='Ball Pool' default)
               .row.h-100
                 .col.h-100
                   .row.h-100.pb-0(style="overflow-y: scroll")
-                    .col-2.p-1(v-for="b in ballPool")
+                    .col-1.p-1(v-for="b in ballPool")
                       b-button(block variant='outline-light') {{ b }}
+            b-tab(title='Results' default)
+              .row.h-100.pb-0(style="overflow-y: scroll")
                 .col.h-100
-                  .row.h-100.pb-0(style="overflow-y: scroll")
-                    .col.h-100
-                      .row(v-for="(list, i) in results")
-                        .col-2.p-1.text-center {{ i+1 }}
-                        .col-2.p-1(v-for="b in list")
-                          b-button(block variant='outline-info') {{ b }}
+                  .row(v-for="(list, i) in results")
+                    .col-1.p-1.text-center {{ i+1 }}
+                    .col-1.p-1(v-for="b in list")
+                      b-button(block variant='outline-info') {{ b }}
             b-tab(title='Hotkey')
               .row.h-100
                 .col.h-100.d-flex.justify-content-center.align-items-center
