@@ -1,22 +1,45 @@
 <template lang="pug">
   .container-fluid.mono-text.v-100.h-100.p-0(ref="board")
+    .loading-page.d-flex.justify-content-center.align-items-center(v-if="isLoading")
+      video.v-bg.v-open(autoplay='true' loop='true')
+        source(src='@/assets/video/main.mp4' type='video/mp4')
     transition
       video.v-bg.v-open(v-if="isOpenShow" autoplay='true' loop='true')
         source(src='@/assets/video/main.mp4' type='video/mp4')
     transition
       video.v-bg.v-loop(autoplay='true' loop='true')
         source(src='@/assets/video/loop.mp4' type='video/mp4')
-    Settings(v-if="isSettingsShow" :results="results" :ballPool="ballPool")
+    Settings(
+      v-if="isSettingsShow"
+      :cardsPerDraw="cardsPerDraw"
+      :results="results"
+      :drewBallPool="drewBallPool"
+      :ballPoolMin="ballPoolMin"
+      :ballPoolMax="ballPoolMax"
+      :filePath="this.store.getPath()"
+      @updated="settingsUpdated"
+    )
     img.settings(src='@/assets/img/settings.png' @click="toggleSettings()")
     transition
       .key-info(v-if="isOpenShow")
         div Press 'E' to start
     .draw-info 
       div
-        .round.bg-warning.text-dark(v-for="r in (1, this.results.length)" @click="playResult(r-1)" :class="{'bg-white text-dark' : currentResultIndex == r}") {{ r }}
+        .round.bg-warning.text-dark(
+          v-for="r in (1, this.results.length)" 
+          @click="playResult(r-1)" 
+          :class="{'bg-white text-dark' : currentResultIndex == r}"
+        ) {{ r }}
       div {{ ballPool.length }} / {{ totalBallPool }}
-    transition(v-for="(c, i) in cardList" :key="`card_` + i")
-      Card(:customStyle="c.style" :number="c.number" :isOpened="c.isOpened" :numberStyle="c.numberStyle" :cardSize="{width: c.cardW, height: c.cardH}")
+    Card(
+      v-for="(c, i) in cardList" 
+      :key="`card_` + i + `_` + cardsPerDraw" 
+      :customStyle="c.style" 
+      :number="c.number" 
+      :isOpened="c.isOpened" 
+      :numberStyle="c.numberStyle" 
+      :cardSize="{width: c.cardW, height: c.cardH}"
+    )
 </template>
 
 <script>
@@ -29,14 +52,17 @@ export default {
   components: { Card, Settings },
   data() {
     return {
+      isLoading: true,
       isOpenShow: true,
       isSettingsShow: false,
       isFullScreen: false,
-      cardAmount: 11,
-      maxPerLine: 6,
       cardList: [],
       state: true,
+      cardsPerDraw: 11,
+      ballPoolMin: 1,
+      ballPoolMax: 110,
       ballPool: [],
+      drewBallPool: [],
       results: [],
       currentResult: [],
       currentResultIndex: 0,
@@ -50,13 +76,21 @@ export default {
       // We'll call our data file 'user-preferences'
       configName: 'user-preferences',
       defaults: {
-        totalBallPool: 0,
+        cardsPerDraw: 11,
+        ballPoolMin: 1,
+        ballPoolMax: 110,
+        totalBallPool: 110,
         ballPool: [],
+        drewBallPool: [],
         results: []
       }
     })
 
+    this.cardsPerDraw = this.store.get('cardsPerDraw')
+    this.ballPoolMin = this.store.get('ballPoolMin')
+    this.ballPoolMax = this.store.get('ballPoolMax')
     this.ballPool = this.store.get('ballPool')
+    this.drewBallPool = this.store.get('drewBallPool')
     this.results = this.store.get('results')
     this.totalBallPool = this.store.get('totalBallPool')
     this.currentResultIndex = this.results.length
@@ -69,6 +103,8 @@ export default {
     this.drawCard()
 
     window.addEventListener('keyup', this.handleKeyup)
+
+    this.isLoading = false
   },
   destroyed() {
     window.removeEventListener('keyup', this.handleKeyup)
@@ -86,6 +122,9 @@ export default {
           this.closeAll()
           break
         case 69: // e
+          if (this.isSettingsShow) {
+            return
+          }
           this.isOpenShow = !this.isOpenShow
           break
         case 82: // r
@@ -100,17 +139,21 @@ export default {
       }
     },
     fullScreen() {
+      this.isLoading = true
       const w = remote.getCurrentWindow()
       w.setFullScreen(this.isFullScreen)
       this.isFullScreen = !this.isFullScreen
       setTimeout(() => {
         this.drawCard()
       }, 1000)
+      setTimeout(() => {
+        this.isLoading = false
+      }, 1800)
     },
     resetBallPool() {
       this.ballPool = []
       this.results = []
-      for (let b = 1; b <= 25; b++) {
+      for (let b = this.ballPoolMin; b <= this.ballPoolMax; b++) {
         this.ballPool.push(b)
       }
       this.totalBallPool = this.ballPool.length
@@ -126,20 +169,35 @@ export default {
       const cardW = winSize.width * 0.1
       const cardH = cardW * 1.5
       const x = Math.sqrt(Math.pow(winSize.width / 2, 2) * 2) / 2 + cardW - 4
-      const y = winSize.height + winSize.width * 0.13
+      let y = winSize.height + winSize.width * 0.12
 
       let fontSize = 70
       if (!this.isFullScreen) {
         fontSize = 110
       }
 
+      let maxPerLine = 5
+      if (this.cardsPerDraw == 11 || this.cardsPerDraw == 6) {
+        maxPerLine = 6
+      }
+
+      let angle = 80
+      if (this.cardsPerDraw <= 4) {
+        angle = 40
+      }
+
+      if (this.cardsPerDraw <= maxPerLine) {
+        y = winSize.height + winSize.width * 0.21
+      }
+
       if (this.cardList.length <= 0) {
-        for (let i = 0; i < this.cardAmount; i++) {
-          const index = this.cardList.length % this.maxPerLine
-          const currentLine = Math.floor(this.cardList.length / this.maxPerLine)
-          const leftAmount = this.cardAmount - 1 - currentLine * this.maxPerLine
-          const amountPerLine = leftAmount > this.maxPerLine ? this.maxPerLine - 1 : leftAmount
-          const r = (80 * index) / amountPerLine + 50
+        for (let i = 0; i < this.cardsPerDraw; i++) {
+          const index = this.cardList.length % maxPerLine
+          const currentLine = Math.floor(this.cardList.length / maxPerLine)
+          const leftAmount = this.cardsPerDraw - 1 - currentLine * maxPerLine
+          const amountPerLine = leftAmount > maxPerLine ? maxPerLine - 1 : leftAmount
+          const r = this.cardsPerDraw == 1 ? 90 : (angle * index) / amountPerLine + ((60 - angle) / 2 + 60)
+          // 100:50 90:45 80:50 70:55 60:60 50:65 40:70 30:75 20:80
           let h = winSize.height * -1 + currentLine * cardH
           if (currentLine > 0) {
             h += 20
@@ -169,11 +227,11 @@ export default {
         }
       } else {
         this.cardList.forEach((card, k) => {
-          const index = k % this.maxPerLine
-          const currentLine = Math.floor(k / this.maxPerLine)
-          const leftAmount = this.cardAmount - 1 - currentLine * this.maxPerLine
-          const amountPerLine = leftAmount > this.maxPerLine ? this.maxPerLine - 1 : leftAmount
-          const r = (80 * index) / amountPerLine + 50
+          const index = k % maxPerLine
+          const currentLine = Math.floor(k / maxPerLine)
+          const leftAmount = this.cardsPerDraw - 1 - currentLine * maxPerLine
+          const amountPerLine = leftAmount > maxPerLine ? maxPerLine - 1 : leftAmount
+          const r = this.cardsPerDraw == 1 ? 90 : (angle * index) / amountPerLine + ((60 - angle) / 2 + 60)
           let h = winSize.height * -1 + currentLine * cardH
           if (currentLine > 0) {
             h += 20
@@ -197,6 +255,10 @@ export default {
       }
     },
     toggleSettings() {
+      if (this.isOpenShow) {
+        return
+      }
+
       this.isSettingsShow = !this.isSettingsShow
     },
     washCard() {
@@ -237,7 +299,11 @@ export default {
 
       this.state = false
       this.currentResult = []
-      this.washCard()
+      let waitWashCard = 100
+      if (this.cardsPerDraw > 1) {
+        this.washCard()
+        waitWashCard = 2500
+      }
       setTimeout(() => {
         this.cardList.forEach((card, k) => {
           setTimeout(() => {
@@ -259,8 +325,9 @@ export default {
         setTimeout(() => {
           this.state = true
           this.saveData()
-        }, this.cardList.length * 500)
-      }, 2500)
+          console.log(this.state)
+        }, this.cardsPerDraw * 550)
+      }, waitWashCard)
     },
     playResult(resultsIndex) {
       if (!this.state) {
@@ -288,7 +355,7 @@ export default {
 
       setTimeout(() => {
         this.state = true
-      }, 500)
+      }, 1500)
     },
     getRandNumber() {
       if (this.ballPool.length <= 0) {
@@ -298,40 +365,92 @@ export default {
       const max = this.ballPool.length
       const index = Math.floor(Math.random() * max)
       const result = this.ballPool[index]
+      this.drewBallPool.push(this.ballPool[index])
       this.ballPool.splice(index, 1)
 
       return result
     },
     saveData() {
+      this.store.set('cardsPerDraw', this.cardsPerDraw)
+      this.store.set('ballPoolMin', this.ballPoolMin)
+      this.store.set('ballPoolMax', this.ballPoolMax)
       this.store.set('totalBallPool', this.totalBallPool)
       this.store.set('ballPool', this.ballPool)
+      this.store.set('drewBallBool', this.drewBallPool)
       this.store.set('results', this.results)
+    },
+    settingsUpdated(info) {
+      if (info.event == 'ballPool') {
+        this.ballPoolMin = info.data.min
+        this.ballPoolMax = info.data.max
+        this.resetBallPool()
+      }
+
+      if (info.event == 'cardsPerDraw') {
+        this.cardList = []
+        this.cardsPerDraw = info.data.count
+
+        this.resetBallPool()
+        this.drawCard()
+        this.saveData()
+      }
+
+      if (info.event == 'resetConfigFile') {
+        this.cardsPerDraw = 11
+        this.ballPoolMin = 1
+        this.ballPoolMax = 110
+        this.ballPool = []
+        this.drewBallPool = []
+        this.results = []
+
+        this.cardList = []
+
+        this.resetBallPool()
+        this.drawCard()
+        this.saveData()
+
+        this.isSettingsShow = false
+        this.isOpenShow = true
+      }
     }
   }
 }
 </script>
 
 <style type="scss" scoped>
+.loading-page {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  background: rgb(0, 0, 0);
+
+  z-index: 100;
+  transition: transform 0.8s;
+}
+
 .draw-info,
 .key-info {
   position: fixed;
   bottom: 20px;
   left: 50%;
   text-align: center;
-  width: 600px;
-  margin-left: -300px;
+  width: 330px;
+  margin-left: -165px;
   color: white;
   font-size: 30px;
-
-  z-index: 3;
 }
 
+.draw-info {
+  z-index: 3;
+}
 .key-info {
-  z-index: 5;
+  z-index: 4;
 }
 
 .settings {
-  z-index: 6;
+  z-index: 3;
   position: fixed;
   right: 10px;
   bottom: 10px;
@@ -371,6 +490,7 @@ export default {
   bottom: 0;
   width: 100%;
   height: 100%;
+  background: rgb(0, 0, 0);
 }
 
 .v-loop {

@@ -11,8 +11,32 @@
 </template>
 
 <script>
-module.exports = {
-  props: ['customStyle', 'number', 'isOpened', 'numberStyle', 'cardSize'],
+export default {
+  props: {
+    customStyle: {
+      type: Object,
+      default: () => {
+        return {}
+      }
+    },
+    number: {
+      type: Number,
+      default: 0
+    },
+    isOpened: Boolean,
+    numberStyle: {
+      type: Object,
+      default: () => {
+        return { 'font-size': '70px' }
+      }
+    },
+    cardSize: {
+      type: Object,
+      default: () => {
+        return { width: 100, height: 150 }
+      }
+    }
+  },
   data() {
     return {}
   },

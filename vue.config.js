@@ -11,7 +11,7 @@ module.exports = {
     electronBuilder: {
       builderOptions: {
         productName: 'ChristmasSlot',
-        appId: 'com.chungyo.rd2',
+        appId: 'self.sherlock.max',
         mac: {
           icon: './src/assets/logo.png',
           target: ['dmg']
