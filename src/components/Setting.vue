@@ -55,17 +55,20 @@
                   b-list-group.w-100
                     b-list-group-item.d-flex.justify-content-between.align-items-center
                       span How many cards per draw
-                      b-dropdown(:text="selfCardsPerDraw.toString()" right variant="warning")
+                      b-dropdown(:text="selfCardsPerDraw.toString()" right variant="outline-warning" style="width: 80px;")
                         b-dropdown-item-button(v-for="n in cardsPerDrawList" :key="`item_` + n" :active="selfCardsPerDraw == n" @click="chooseCardsPerDraw(n)") {{ n }}
                     b-list-group-item.d-flex.justify-content-between.align-items-center
                       span Config file path
-                      span.text-muted {{ filePath }}
+                      span.text-muted {{ filePath }} 
+                        b-button(variant='outline-light' @click="copyPath()" style="width: 80px;") Copy
                     b-list-group-item.d-flex.justify-content-between.align-items-center
                       span Reset all data
-                      b-button(variant='outline-danger' @click="resetConfigFile()") Reset
+                      b-button(variant='outline-danger' @click="resetConfigFile()" style="width: 80px;") Reset
 </template>
 
 <script>
+const { clipboard } = require('electron')
+
 export default {
   // props: ['cardsPerDraw', 'ballPoolMin', 'ballPoolMax', 'results', 'drewBallPool', 'filePath'],
   props: {
@@ -125,6 +128,9 @@ export default {
     },
     resetConfigFile() {
       this.$emit('updated', { event: 'resetConfigFile', data: {} })
+    },
+    copyPath() {
+      clipboard.writeText(this.filePath)
     }
   }
 }
